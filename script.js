@@ -358,3 +358,15 @@ function loadStats() {
     if (totalPointsEl) totalPointsEl.innerText = totalPoints;
     updateLevelAndTitle();
 }
+// --- MODULE INJECTÉ : GESTION INTERACTIVE DU DARK MODE ---
+function toggleDarkMode() {
+    const html = document.documentElement;
+    const icon = document.getElementById('theme-icon');
+    if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        if (icon) icon.className = "fa-solid fa-shirt text-brandOrange";
+    } else {
+        html.classList.add('dark');
+        if (icon) icon.className = "fa-solid fa-shirt text-brandGreen";
+    }
+}
