@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StitchLingo - Vocabulaire de la Couture & Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brandBlue: '#090A10',    // Fond noir studio mode profond
+                        brandOrange: '#FF0066',  // Fil néon rose magenta (Tension)
+                        brandGreen: '#00E5FF',   // Ligne de patronage cyan laser
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .flashcard { perspective: 1000px; }
+        .flashcard-inner { transition: transform 0.6s; transform-style: preserve-3d; }
+        .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+        .flashcard-front, .flashcard-back { backface-visibility: hidden; }
+        .flashcard-back { transform: rotateY(180deg); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* Animation Confettis de Défilé */
+        .confetti {
+            position: fixed; width: 10px; height: 10px; z-index: 100;
+            animation: fall 3s linear forwards;
+        }
+        @keyframes fall {
+            0 { transform: translateY(-5vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-[#05060A] text-gray-100 font-sans min-h-screen flex flex-col transition-colors duration-200">
+
+    <header class="bg-[#090A10] text-white p-4 shadow-lg sticky top-0 z-50 border-b border-brandGreen/20">
+        <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center justify-between w-full sm:w-auto gap-4">
+                <h1 class="text-xl font-black tracking-widest flex items-center gap-2 uppercase">
+                    <span class="text-brandGreen animate-pulse"><i class="fa-solid fa-scissors"></i></span> StitchLingo
+                </h1>
+                <div class="p-2 bg-white/5 rounded-full text-sm">
+                    <i id="theme-icon" class="fa-solid fa-shirt text-brandGreen"></i>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-2 justify-center">
+                <div class="bg-[#11131F] border border-brandGreen text-brandGreen px-3 py-1 rounded-full text-xs font-black shadow-[0_0_10px_rgba(0,229,255,0.2)]">
+                    <span id="user-title">Noob de l'Aiguille 🪡</span> (Niv.<span id="user-level">1</span>)
+                </div>
+                <div class="bg-brandGreen/10 border border-brandGreen text-brandGreen px-3 py-1 rounded-full text-sm font-black flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-graduation-cap text-yellow-300"></i> <span id="total-points">0</span> XP
+                </div>
+                <div id="streak-badge" class="bg-brandOrange/10 border border-brandOrange text-brandOrange px-3 py-1 rounded-full text-sm font-black flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-fire text-brandOrange animate-pulse"></i> <span id="streak-count">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav class="bg-[#05060A]/90 backdrop-blur border-b border-white/5 overflow-x-auto whitespace-nowrap scrollbar-none sticky top-[116px] sm:top-[68px] z-40 shadow-md">
+        <div class="flex justify-start md:justify-center p-2 gap-2 container mx-auto" id="navigation-tabs">
+            <button onclick="switchTab(event, 'dict')" class="tab-btn bg-brandBlue text-white px-5 py-2.5 rounded-xl font-black text-sm transition border border-brandGreen shadow-[0_4px_15px_rgba(0,229,255,0.3)]">
+                <i class="fa-solid fa-book-open mr-1"></i> Patronthèque
+            </button>
+            <button onclick="switchTab(event, 'flash')" class="tab-btn bg-[#090A10] border border-white/5 text-gray-300 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 transform hover:scale-105">
+                <i class="fa-solid fa-layer-group mr-1"></i> Flash-Stitch
+            </button>
+            <button onclick="switchTab(event, 'quiz')" class="tab-btn bg-[#090A10] border border-white/5 text-gray-300 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 transform hover:scale-105">
+                <i class="fa-solid fa-crosshairs mr-1"></i> Fitting-Quiz
+            </button>
+            <button onclick="switchTab(event, 'speak')" class="tab-btn bg-[#090A10] border border-white/5 text-gray-300 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 transform hover:scale-105">
+              <i class="fa-solid fa-headset mr-1"></i> Vocal-Check
+            </button>
+            <button onclick="switchTab(event, 'match')" class="tab-btn bg-[#090A10] border border-white/5 text-gray-300 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 transform hover:scale-105">
+                <i class="fa-solid fa-bezier-curve mr-1"></i> Assemblage
+            </button>
+            <button onclick="switchTab(event, 'stats')" class="tab-btn bg-[#090A10] border border-white/5 text-gray-300 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 transform hover:scale-105">
+                <i class="fa-solid fa-chart-simple mr-1"></i> Lookbook
+            </button>
+        </div>
+    </nav>
+
+   <main class="container mx-auto max-w-xl p-4 flex-grow mb-16">
+
+        <div class="mb-4 bg-[#090A10] p-4 rounded-2xl shadow-xl border border-white/5">
+            <label for="vocab-level-select" class="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">
+                <i class="fa-solid fa-compass-drafting text-brandGreen"></i> Atelier de sur-mesure actif :
+            </label>
+            <select id="vocab-level-select" onchange="setVocabLevel(this.value)" class="w-full p-3 border border-white/10 rounded-xl outline-none focus:border-brandOrange text-sm font-black bg-[#11131F] text-white transition cursor-pointer shadow-inner">
+                <option value="1">Niveau 1 : La Boîte à Couture & Outils de Base</option>
+                <option value="2" id="opt-level-2" disabled>🔒 Niveau 2 : La Machine à Coudre & Mécanique</option>
+                <option value="3" id="opt-level-3" disabled>🔒 Niveau 3 : Les Matières & Textiles</option>
+                <option value="4" id="opt-level-4" disabled>🔒 Niveau 4 : Patronage, Tracé & Coupe</option>
+                <option value="5" id="opt-level-5" disabled>🔒 Niveau 5 : Techniques d'Assemblage & Points</option>
+                <option value="6" id="opt-level-6" disabled>🔒 Niveau 6 : Anatomie du Vêtement & Mercerie</option>
+                <option value="7" id="opt-level-7" disabled>🔒 Niveau 7 : Haute Couture & Fashion Studio</option>
+            </select>
+            <p id="vocab-unlock-hint" class="text-[11px] text-gray-400 mt-2 italic">Astuce : Débloque de l'XP de styliste pour ouvrir les techniques avancées de la Fashion Week !</p>
+        </div>
+
+        <div class="mb-4 bg-[#090A10] p-3 rounded-xl shadow-sm border border-white/5 flex flex-wrap items-center justify-between gap-3 text-sm">
+            <div class="flex items-center gap-2">
+                <label class="font-bold text-gray-400">Vitesse du moteur :</label>
+                <button id="speed-normal" onclick="setAudioSpeed(1.0)" class="px-3 py-1.5 bg-brandBlue text-white rounded-lg font-black shadow-sm border border-brandGreen">1x (Cadence Pro)</button>
+                <button id="speed-slow" onclick="setAudioSpeed(0.6)" class="px-3 py-1.5 bg-gray-900 text-gray-300 rounded-lg flex items-center gap-1 hover:bg-gray-800 font-bold border border-white/10">🐢 Point Bâtir</button>
+            </div>
+            <div id="autoplay-container" class="hidden flex items-center gap-2">
+                <input type="checkbox" id="autoplay-checkbox" class="w-4 h-4 text-brandOrange bg-gray-900 border-white/10 rounded focus:ring-brandOrange">
+                <label for="autoplay-checkbox" class="font-bold text-gray-400 cursor-pointer">Fil continu</label>
+            </div>
+        </div>
+
+        <section id="tab-dict" class="tab-content active space-y-4">
+            <div class="flex gap-2">
+                <div class="relative flex-grow">
+                    <input type="text" id="search-input" oninput="filterWords()" placeholder="Rechercher un composant, une étoffe..." class="w-full p-3 pl-10 border border-white/10 bg-[#11131F] rounded-xl focus:border-brandOrange text-white outline-none transition shadow-inner">
+                    <i class="fa-solid fa-wand-recolored absolute left-3 top-4 text-gray-500"></i>
+                </div>
+                <button onclick="toggleDirectionDico()" id="direction-filter-btn" class="px-3 bg-[#11131F] border border-white/10 rounded-xl text-brandGreen hover:border-brandOrange transition font-black text-xs flex items-center gap-1 uppercase tracking-wider">
+                    <i class="fa-solid fa-right-left"></i> <span id="direction-label">FR ➔ EN</span>
+                </button>
+                <button onclick="toggleFavFilter()" id="fav-filter-btn" class="px-4 bg-[#11131F] border border-white/10 rounded-xl text-gray-400 hover:text-yellow-400 transition">
+                    <i class="fa-solid fa-star text-xl"></i>
+                </button>
+            </div>
+            <div id="dict-list" class="grid grid-cols-1 gap-3"></div>
+        </section>
+
+        <section id="tab-flash" class="tab-content hidden space-y-6 text-center">
+            <div class="flex justify-center gap-2">
+                <button id="slideshow-btn" onclick="toggleSlideshow()" class="bg-brandGreen text-[#05060A] px-5 py-2.5 rounded-xl text-sm font-black shadow-md transition hover:scale-105 uppercase tracking-wider">
+                    <i class="fa-solid fa-play mr-1"></i> Lancer l'Entraînement Continu
+                </button>
+            </div>
+            <p class="text-xs text-gray-400 uppercase tracking-widest font-black">Retourne la carte pour analyser la coupe</p>
+            <div class="flex justify-center">
+                <div id="main-flashcard" class="flashcard w-72 h-96 cursor-pointer" onclick="this.classList.toggle('flipped')">
+                    <div class="flashcard-inner relative w-full h-full shadow-2xl rounded-3xl border border-white/5">
+                        <div class="flashcard-front absolute w-full h-full bg-[#11131F] rounded-3xl flex flex-col justify-between p-6 border border-white/5">
+                            <span class="text-7xl my-auto drop-shadow-[0_0_15px_rgba(0,229,255,0.3)]" id="flash-emoji">🪡</span>
+                            <div>
+                                <h3 class="text-3xl font-black text-white tracking-wide uppercase" id="flash-en">Needle</h3>
+                                <button onclick="event.stopPropagation(); playAudio(document.getElementById('flash-en').innerText)" class="mt-3 bg-brandBlue text-white p-2 rounded-full w-12 h-12 hover:bg-brandOrange border border-brandGreen transition shadow-lg">
+                                    <i class="fa-solid fa-volume-high text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flashcard-back absolute w-full h-full bg-gradient-to-br from-brandBlue to-[#05060A] text-white rounded-3xl flex flex-col justify-center items-center p-6 border-2 border-brandOrange">
+                            <span class="text-xs uppercase tracking-widest text-brandOrange font-black mb-2">Fiche Modéliste</span>
+                            <h3 class="text-3xl font-black text-brandGreen uppercase tracking-wide" id="flash-fr">Aiguille</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-center gap-4">
+                <button id="flash-prev-btn" onclick="prevFlashcard()" class="bg-gray-900 border border-white/5 p-3 rounded-xl hover:bg-brandOrange hover:text-white transition w-16 text-gray-400"><i class="fa-solid fa-chevron-left"></i></button>
+                <button id="flash-next-btn" onclick="nextFlashcard()" class="bg-brandBlue text-white border border-brandGreen p-3 rounded-xl hover:bg-brandOrange transition w-32 font-black uppercase tracking-wider shadow">Suivant</button>
+            </div>
+        </section>
+
+        <section id="tab-quiz" class="tab-content hidden space-y-4">
+            <div id="quiz-mode-menu" class="bg-[#090A10] p-6 rounded-3xl shadow-xl border border-white/5 text-center space-y-4">
+                <p class="text-sm font-black text-gray-400 uppercase tracking-wider">Sélectionne ton type d'évaluation :</p>
+                <div class="grid grid-cols-1 gap-3">
+                    <button onclick="launchStandardQuiz()" class="bg-brandBlue text-white border-2 border-brandGreen/50 p-4 rounded-xl font-black text-sm shadow-xl transition flex items-center justify-center gap-2 uppercase tracking-wide">
+                        <i class="fa-solid fa-shirt text-base text-brandGreen"></i> Session Fitting Standard (10 Mots)
+                    </button>
+                    <button onclick="launchTimeAttack()" class="bg-gradient-to-r from-brandOrange to-purple-600 text-white p-4 rounded-xl font-black text-sm shadow-xl transition transform hover:scale-[1.01] flex items-center justify-center gap-2 uppercase tracking-widest">
+                        <i class="fa-solid fa-bolt text-base animate-pulse"></i> Mode Défilé Flash Chrono (60s)
+                    </button>
+                </div>
+            </div>
+
+            <div id="quiz-classic-zone" class="hidden space-y-4">
+                <div class="bg-[#090A10] p-4 rounded-xl shadow border border-white/5 flex justify-between items-center">
+                    <span class="font-black text-xs text-gray-400 uppercase tracking-wider">Pièce du patron <span id="quiz-current">1</span>/10</span>
+                    <span class="text-brandGreen font-black text-xs uppercase tracking-wider">Ajustements exacts: <span id="quiz-score">0</span>/10</span>
+                </div>
+                <div class="bg-[#11131F] p-8 rounded-2xl shadow-inner border border-white/5 text-center space-y-2">
+                    <p class="text-xs text-gray-500 font-black uppercase tracking-widest">Traduis le terme stylisme :</p>
+                    <h2 class="text-3xl font-black text-white tracking-wide uppercase" id="quiz-question">Needle</h2>
+                </div>
+                <div id="quiz-options" class="grid grid-cols-1 gap-3"></div>
+            </div>
+
+            <div id="quiz-timeattack-zone" class="hidden space-y-4">
+                <div class="bg-[#090A10] p-4 rounded-xl shadow border border-white/5 flex justify-between items-center">
+                    <span class="font-black text-brandOrange flex items-center gap-1.5 text-sm uppercase tracking-wider"><i class="fa-solid fa-stopwatch animate-pulse"></i> Rush Avant-Première : <span id="ta-timer" class="font-black text-lg">60</span>s</span>
+                    <span class="text-brandGreen font-black text-sm uppercase tracking-wider">Modèles Validés : <span id="ta-score" class="font-black text-lg">0</span></span>
+                </div>
+                <div class="bg-gradient-to-r from-brandOrange/5 to-brandBlue/5 bg-[#11131F] p-8 rounded-2xl shadow-inner border border-white/5 text-center space-y-2">
+                    <p class="text-xs text-brandOrange font-black uppercase tracking-widest">Les mannequins entrent sur le podium ! Enchaîne les coupes !</p>
+                    <h2 class="text-4xl font-black text-white tracking-wide uppercase" id="ta-question">Thread</h2>
+                </div>
+                <div id="ta-options" class="grid grid-cols-1 gap-3"></div>
+            </div>
+        </section>
+
+        <section id="tab-speak" class="tab-content hidden space-y-4 text-center">
+            <div class="bg-[#090A10] p-4 rounded-xl shadow border border-white/5 flex justify-between items-center">
+                <span class="font-black text-xs text-gray-400 uppercase tracking-wider">Analyseur Phonétique d'Atelier</span>
+                <span class="text-brandGreen font-black text-xs uppercase tracking-wider">Série: <span id="speak-score">0</span></span>
+            </div>
+            <div class="bg-[#11131F] p-8 rounded-2xl shadow-lg border border-white/5 space-y-6">
+                <p class="text-gray-400 font-bold text-sm">Observe l'élément et prononce distinctement en <span class="font-black text-brandGreen">Anglais</span> :</p>
+                <div class="flex items-center justify-center gap-4 bg-[#05060A] p-4 rounded-2xl border border-white/5 shadow-inner">
+                    <span class="text-6xl block drop-shadow-[0_0_10px_rgba(0,229,255,0.2)]" id="speak-emoji">🪡</span>
+                    <h2 class="text-3xl font-black text-white tracking-wide uppercase" id="speak-prompt-fr">Aiguille</h2>
+                </div>
+                <button id="mic-btn" onclick="startSpeechRecognition()" class="bg-brandOrange border-2 border-transparent text-white w-24 h-24 rounded-full text-3xl shadow-2xl hover:scale-105 active:scale-95 transition-all mx-auto flex items-center justify-center relative shadow-[0_0_25px_rgba(255,0,102,0.4)]">
+                    <i class="fa-solid fa-microphone-lines"></i>
+                    <span id="mic-pulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brandOrange opacity-50 hidden"></span>
+                </button>
+                <p id="speech-status" class="text-xs font-black text-gray-500 uppercase tracking-widest">Ouvrir l'intercom micro</p>
+                <div id="speech-result" class="hidden text-sm font-black p-4 rounded-xl"></div>
+            </div>
+        </section>
+
+        <section id="tab-match" class="tab-content hidden space-y-4">
+            <p class="text-xs text-center text-gray-400 font-black uppercase tracking-widest">Bâtissage de lignes : Connecte le Cyan (EN) au Fuchsia (FR)</p>
+            <div class="grid grid-cols-2 gap-3" id="matching-grid"></div>
+            <button onclick="initMatching()" class="w-full bg-[#11131F] text-brandGreen border border-brandGreen/40 p-3 rounded-xl font-black mt-2 shadow-lg hover:bg-brandGreen hover:text-slate-950 transition uppercase tracking-wider">Réaligner les Épingles</button>
+        </section>
+
+        <section id="tab-stats" class="tab-content hidden space-y-4">
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="bg-[#11131F] p-3 rounded-xl border border-brandOrange/30 shadow-md">
+                    <span class="text-[10px] text-gray-400 block font-black uppercase tracking-wider">Fitting Record</span>
+                    <span class="text-xl font-black text-brandOrange" id="stat-high-quiz">0</span><span class="text-xs text-gray-500">/10</span>
+                </div>
+                <div class="bg-[#11131F] p-3 rounded-xl border border-brandGreen/30 shadow-md">
+                    <span class="text-[10px] text-gray-400 block font-black uppercase tracking-wider">Vocal Peak</span>
+                    <span class="text-xl font-black text-brandGreen" id="stat-high-speak">0</span>
+                </div>
+                <div class="bg-[#11131F] p-3 rounded-xl border border-purple-500/30 shadow-md">
+                    <span class="text-[10px] text-gray-400 block font-black uppercase tracking-wider">Runway Max</span>
+                    <span class="text-xl font-black text-purple-400" id="stat-high-timeattack">0</span>
+                </div>
+            </div>
+            <div class="bg-[#11131F] p-3 rounded-xl border border-white/5 shadow-inner text-center">
+                <span class="text-xs text-gray-400 block font-black uppercase tracking-wider">Points de surjet consécutifs réussis</span>
+                <span class="text-2xl font-black text-yellow-400" id="stat-max-streak">0</span> 🔥
+            </div>
+            <div class="bg-[#090A10] p-4 rounded-2xl border border-white/10 shadow-lg">
+                <h3 class="font-black text-xs text-white uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <i class="fa-solid fa-trophy text-yellow-400 animate-bounce"></i> Trophées de la Fédération du Design & Streetwear
+                </h3>
+                <div id="badges-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+            </div>
+            <div class="bg-[#090A10] p-4 rounded-2xl border border-white/10 shadow-lg">
+                <h3 class="font-black text-xs text-brandOrange uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-scissors"></i> Retouches de l'Atelier (Pièces à ré-ajuster)
+                </h3>
+                <p class="text-[10px] text-gray-400 font-bold mb-3">Ces textiles et outils reviennent dans la boucle pour éliminer les plis de mémoire.</p>
+                <div id="error-history-list" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-sm"></div>
+            </div>
+            <button onclick="resetStats()" class="w-full bg-red-950/40 text-red-400 border border-red-900/40 p-2.5 rounded-xl text-xs font-black transition hover:bg-red-900/60 uppercase tracking-widest">
+                Résilier le contrat d'Atelier / Effacer le Lookbook
+            </button>
+        </section>
+
+   </main>
+
+    <footer class="bg-[#090A10] text-gray-600 text-center py-4 text-xs mt-auto border-t border-white/5">
+        &copy; 2026 StitchLingo Studio - Conception Textile & Modélisme Digital. Tous droits réservés.
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="relay.js"></script>
+</body>
+</html>
